@@ -13,7 +13,6 @@ const nav = [
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const xpToNext = user ? user.level * 100 : 100;
@@ -21,44 +20,62 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-64 bg-card border-r-2 border-primary flex flex-col" style={{ boxShadow: '4px 0 0 #6366F1' }}>
-        <div className="p-6 border-b-2 border-primary">
-          <h1 className="display-text text-4xl text-primary leading-none">HABIT</h1>
-          <h1 className="display-text text-4xl text-accent leading-none">QUEST</h1>
-          <p className="text-xs text-muted mt-1 font-body">Level up your life</p>
+      {/* Sidebar */}
+      <aside className="w-64 flex flex-col flex-shrink-0" style={{
+        background: 'rgba(10,10,15,0.95)',
+        borderRight: '1px solid rgba(124,58,237,0.3)',
+        boxShadow: '4px 0 30px rgba(124,58,237,0.08)',
+      }}>
+        {/* Logo */}
+        <div className="p-6" style={{ borderBottom: '1px solid rgba(124,58,237,0.2)' }}>
+          <div className="display text-3xl leading-tight" style={{
+            background: 'linear-gradient(135deg, #A78BFA, #00F5FF)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>HABIT<br/>QUEST</div>
+          <p className="text-xs mt-2 font-body" style={{ color: '#64748B' }}>Level up your life</p>
         </div>
 
+        {/* XP bar */}
         {user && (
-          <div className="p-4 border-b-2 border-white/5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-muted font-body">Level {user.level}</span>
-              <span className="text-xs text-accent font-body">{user.xp} / {xpToNext} XP</span>
+          <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-xs font-body" style={{ color: '#A78BFA' }}>LVL {user.level}</span>
+              <span className="text-xs font-body" style={{ color: '#00F5FF' }}>{user.xp} / {xpToNext} XP</span>
             </div>
-            <div className="w-full bg-bg rounded-full h-2 border border-white/10">
-              <div
-                className="h-full rounded-full bg-accent transition-all duration-500"
-                style={{ width: `${xpPct}%` }}
-              />
+            <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{
+                width: `${xpPct}%`,
+                background: 'linear-gradient(90deg, #7C3AED, #00F5FF)',
+                boxShadow: '0 0 8px rgba(0,245,255,0.6)',
+              }} />
             </div>
-            <p className="text-sm font-semibold mt-1 font-body text-white">{user.username}</p>
+            <p className="text-sm font-semibold mt-1.5 font-body text-white">{user.username}</p>
           </div>
         )}
 
-        <nav className="flex-1 p-4 flex flex-col gap-1">
+        {/* Nav */}
+        <nav className="flex-1 p-3 flex flex-col gap-1 mt-1">
           {nav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg font-body font-medium transition-all text-sm cursor-pointer border-2 ${
-                  isActive
-                    ? 'bg-primary border-primary-dark text-white'
-                    : 'border-transparent text-muted hover:text-white hover:bg-white/5'
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg font-body font-medium transition-all text-sm cursor-pointer ${
+                  isActive ? 'text-white' : 'text-muted hover:text-white'
                 }`
               }
+              style={({ isActive }) => isActive ? {
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(176,38,255,0.15))',
+                border: '1px solid rgba(124,58,237,0.4)',
+                boxShadow: '0 0 15px rgba(124,58,237,0.15)',
+              } : {
+                border: '1px solid transparent',
+              }}
             >
-              <Icon size={18} />
+              <Icon size={17} />
               {label}
             </NavLink>
           ))}
@@ -66,12 +83,22 @@ export default function Layout() {
 
         <button
           onClick={handleLogout}
-          className="m-4 flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-danger transition-colors font-body rounded-lg hover:bg-danger/10 cursor-pointer"
+          className="mx-3 mb-4 flex items-center gap-2 px-3 py-2 text-sm font-body rounded-lg transition-colors cursor-pointer"
+          style={{ color: '#64748B', border: '1px solid transparent' }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.color = '#FF3366';
+            (e.currentTarget as HTMLElement).style.background = 'rgba(255,51,102,0.08)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.color = '#64748B';
+            (e.currentTarget as HTMLElement).style.background = 'transparent';
+          }}
         >
-          <LogOut size={16} /> Logout
+          <LogOut size={15} /> Logout
         </button>
       </aside>
 
+      {/* Main */}
       <main className="flex-1 overflow-auto p-6 bg-bg">
         <Outlet />
       </main>

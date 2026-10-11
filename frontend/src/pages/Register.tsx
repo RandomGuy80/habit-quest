@@ -15,58 +15,53 @@ export default function Register() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      await register(username, email, password);
-      navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
+    try { await register(username, email, password); navigate('/'); }
+    catch (err: any) { setError(err.response?.data?.error || 'Registration failed'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4"
+      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.08) 0%, #0A0A0F 60%)' }}>
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="display-text text-6xl text-primary">HABIT</h1>
-          <h1 className="display-text text-6xl text-accent">QUEST</h1>
-          <p className="text-muted font-body mt-2">Your journey begins now!</p>
+        <div className="text-center mb-10">
+          <h1 className="display text-7xl leading-none" style={{
+            background: 'linear-gradient(135deg, #A78BFA 0%, #00F5FF 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>HABIT<br/>QUEST</h1>
+          <p className="font-body mt-3" style={{ color: '#64748B' }}>Your journey begins now!</p>
         </div>
 
-        <div className="comic-card p-6">
-          <h2 className="display-text text-2xl text-white mb-6">CREATE ACCOUNT</h2>
+        <div className="neon-card p-7">
+          <h2 className="display text-2xl text-white mb-6 tracking-widest">CREATE ACCOUNT</h2>
+
           {error && (
-            <div className="bg-danger/10 border-2 border-danger rounded-lg p-3 mb-4 text-danger text-sm font-body">
-              {error}
-            </div>
+            <div className="neon-card-pink p-3 mb-4 text-sm font-body" style={{ color: '#F43F5E' }}>{error}</div>
           )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="text-xs text-muted font-body block mb-1">USERNAME</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
-                placeholder="HeroPlayer99" required />
+              <label className="block mb-1.5 text-xs font-body tracking-widest" style={{ color: '#64748B' }}>USERNAME</label>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                className="neon-input" placeholder="HeroPlayer99" required />
             </div>
             <div>
-              <label className="text-xs text-muted font-body block mb-1">EMAIL</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
-                placeholder="you@example.com" required />
+              <label className="block mb-1.5 text-xs font-body tracking-widest" style={{ color: '#64748B' }}>EMAIL</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                className="neon-input" placeholder="you@example.com" required />
             </div>
             <div>
-              <label className="text-xs text-muted font-body block mb-1">PASSWORD</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
-                placeholder="••••••••" minLength={6} required />
+              <label className="block mb-1.5 text-xs font-body tracking-widest" style={{ color: '#64748B' }}>PASSWORD</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                className="neon-input" placeholder="••••••••" minLength={6} required />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 disabled:opacity-50">
-              {loading ? 'Creating...' : 'START QUEST →'}
+            <button type="submit" disabled={loading} className="btn-neon w-full mt-2 tracking-widest disabled:opacity-50">
+              {loading ? 'LOADING...' : 'START QUEST →'}
             </button>
           </form>
-          <p className="text-center text-sm text-muted mt-4 font-body">
+          <p className="text-center text-sm font-body mt-5" style={{ color: '#64748B' }}>
             Already have an account?{' '}
-            <Link to="/login" className="text-accent hover:underline">Login</Link>
+            <Link to="/login" style={{ color: '#A78BFA' }} className="font-semibold">Login</Link>
           </p>
         </div>
       </div>

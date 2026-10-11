@@ -10,14 +10,20 @@ interface Habit {
 
 const CATEGORIES = ['General', 'Health', 'Mind', 'Work', 'Sport', 'Learning', 'Social'];
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
-const COLORS = ['#818CF8', '#22D3EE', '#10B981', '#EF4444', '#EC4899', '#A78BFA', '#F97316', '#06B6D4'];
+const COLORS = ['#A78BFA', '#00F5FF', '#00FF88', '#FF3366', '#F97316', '#7C3AED', '#B026FF', '#00B4D8'];
 const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
 
 const empty = {
   name: '', category: 'General', difficulty: 'medium',
-  color: '#818CF8', icon: 'star', notes: '',
+  color: '#A78BFA', icon: 'star', notes: '',
   frequency: ['mon','tue','wed','thu','fri','sat','sun'],
 };
+
+const diffStyle = (d: string) => ({
+  hard: { background: 'rgba(255,51,102,0.15)', color: '#FF3366' },
+  easy: { background: 'rgba(0,255,136,0.12)', color: '#00FF88' },
+  medium: { background: 'rgba(124,58,237,0.15)', color: '#A78BFA' },
+}[d] ?? {});
 
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -37,19 +43,18 @@ export default function Habits() {
     setEditing(h); setShowModal(true);
   };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: string) =>
     setForm((f) => ({
       ...f,
       frequency: f.frequency.includes(day) ? f.frequency.filter((d) => d !== day) : [...f.frequency, day],
     }));
-  };
 
   const save = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      if (editing) { await api.put(`/habits/${editing.id}`, form); }
-      else { await api.post('/habits', form); }
+      if (editing) await api.put(`/habits/${editing.id}`, form);
+      else await api.post('/habits', form);
       setShowModal(false);
       await load();
     } finally { setSaving(false); }
@@ -64,48 +69,62 @@ export default function Habits() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="display-text text-3xl text-white">MY HABITS</h2>
-        <button onClick={openNew} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> New Habit
+        <h2 className="display text-3xl neon-text-purple">MY HABITS</h2>
+        <button onClick={openNew} className="btn-neon flex items-center gap-2">
+          <Plus size={15} /> ADD HABIT
         </button>
       </div>
 
       {habits.length === 0 ? (
-        <div className="comic-card p-10 text-center">
-          <p className="display-text text-3xl text-muted mb-2">NO HABITS YET!</p>
-          <button onClick={openNew} className="btn-primary mt-4">CREATE YOUR FIRST →</button>
+        <div className="neon-card p-12 text-center">
+          <p className="display text-3xl neon-text-purple mb-2">NO HABITS YET!</p>
+          <p className="text-sm font-body mt-2 mb-6" style={{ color: '#64748B' }}>Create your first quest and start leveling up</p>
+          <button onClick={openNew} className="btn-neon">CREATE YOUR FIRST →</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {habits.map((h) => (
-            <div key={h.id} className="bg-card rounded-xl border-2 p-4 transition-all"
-              style={{ borderColor: h.color, boxShadow: `4px 4px 0px ${h.color}40` }}>
+            <div key={h.id} className="rounded-xl p-4 transition-all"
+              style={{
+                background: 'rgba(15,15,26,0.9)',
+                border: `1px solid ${h.color}60`,
+                boxShadow: `0 0 20px ${h.color}15`,
+              }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white font-body truncate">{h.name}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: h.color, boxShadow: `0 0 6px ${h.color}` }} />
+                    <h3 className="font-semibold text-white font-body truncate">{h.name}</h3>
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted font-body">{h.category}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded font-body capitalize ${
-                      h.difficulty === 'hard' ? 'bg-danger/20 text-danger' :
-                      h.difficulty === 'easy' ? 'bg-success/20 text-success' : 'bg-primary/20 text-primary'
-                    }`}>{h.difficulty}</span>
+                    <span className="text-xs font-body" style={{ color: '#64748B' }}>{h.category}</span>
+                    <span className="neon-badge" style={diffStyle(h.difficulty)}>{h.difficulty}</span>
                   </div>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => openEdit(h)} className="p-1.5 text-muted hover:text-primary transition-colors cursor-pointer">
+                  <button onClick={() => openEdit(h)}
+                    className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                    style={{ color: '#64748B' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#A78BFA')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#64748B')}>
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => remove(h.id)} className="p-1.5 text-muted hover:text-danger transition-colors cursor-pointer">
+                  <button onClick={() => remove(h.id)}
+                    className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                    style={{ color: '#64748B' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#FF3366')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#64748B')}>
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-                <div className="flex items-center gap-1">
-                  <Droplets size={14} className="text-accent" />
-                  <span className="display-text text-accent text-sm">{h.current_streak} streak</span>
+              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center gap-1.5">
+                  <Droplets size={13} style={{ color: '#00F5FF' }} />
+                  <span className="display text-sm neon-text-cyan">{h.current_streak}</span>
+                  <span className="text-xs font-body" style={{ color: '#64748B' }}>streak</span>
                 </div>
-                <span className="text-xs text-muted font-body">{h.total_completions} total</span>
+                <span className="text-xs font-body" style={{ color: '#64748B' }}>{h.total_completions} total</span>
               </div>
             </div>
           ))}
@@ -113,90 +132,112 @@ export default function Habits() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="comic-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="display-text text-2xl text-white">{editing ? 'EDIT HABIT' : 'NEW HABIT'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-muted hover:text-white cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="neon-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="display text-2xl neon-text-purple">{editing ? 'EDIT HABIT' : 'NEW HABIT'}</h3>
+              <button onClick={() => setShowModal(false)}
+                className="cursor-pointer transition-colors"
+                style={{ color: '#64748B' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#E2E8F0')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#64748B')}>
+                <X size={20} />
+              </button>
             </div>
 
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-xs text-muted font-body block mb-1">HABIT NAME *</label>
+                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>HABIT NAME *</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
-                  placeholder="e.g. Morning workout"
+                  className="neon-input" placeholder="e.g. Morning workout"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted font-body block mb-1">CATEGORY</label>
+                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>CATEGORY</label>
                   <select
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
+                    className="neon-input cursor-pointer"
+                    style={{ appearance: 'none' }}
                   >
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {CATEGORIES.map((c) => <option key={c} value={c} style={{ background: '#0F0F1A' }}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted font-body block mb-1">DIFFICULTY</label>
+                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>DIFFICULTY</label>
                   <select
                     value={form.difficulty}
                     onChange={(e) => setForm((f) => ({ ...f, difficulty: e.target.value }))}
-                    className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
+                    className="neon-input cursor-pointer"
+                    style={{ appearance: 'none' }}
                   >
-                    {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
+                    {DIFFICULTIES.map((d) => <option key={d} value={d} style={{ background: '#0F0F1A' }}>{d}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-muted font-body block mb-2">COLOR</label>
+                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>COLOR</label>
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map((c) => (
                     <button key={c} onClick={() => setForm((f) => ({ ...f, color: c }))}
-                      className="w-7 h-7 rounded-full border-2 cursor-pointer transition-transform hover:scale-110"
-                      style={{ background: c, borderColor: form.color === c ? 'white' : 'transparent' }}
+                      className="w-7 h-7 rounded-full cursor-pointer transition-transform hover:scale-110"
+                      style={{
+                        background: c,
+                        boxShadow: form.color === c ? `0 0 10px ${c}, 0 0 20px ${c}80` : 'none',
+                        outline: form.color === c ? `2px solid white` : 'none',
+                        outlineOffset: '2px',
+                      }}
                     />
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-muted font-body block mb-2">DAYS</label>
-                <div className="flex gap-2">
+                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>DAYS</label>
+                <div className="flex gap-1.5">
                   {DAYS.map((d) => (
                     <button key={d} onClick={() => toggleDay(d)}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-body font-semibold border-2 cursor-pointer transition-all uppercase ${
-                        form.frequency.includes(d)
-                          ? 'bg-primary border-primary-dark text-white'
-                          : 'bg-bg border-white/10 text-muted'
-                      }`}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-body font-semibold cursor-pointer transition-all uppercase"
+                      style={form.frequency.includes(d) ? {
+                        background: 'linear-gradient(135deg, #7C3AED, #B026FF)',
+                        color: 'white',
+                        boxShadow: '0 0 10px rgba(176,38,255,0.4)',
+                        border: 'none',
+                      } : {
+                        background: 'rgba(255,255,255,0.03)',
+                        color: '#64748B',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
                     >{d.slice(0, 1)}</button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-muted font-body block mb-1">NOTES (optional)</label>
+                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>NOTES (optional)</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary resize-none"
+                  className="neon-input resize-none"
                   rows={2} placeholder="Any notes..."
                 />
               </div>
 
-              <div className="flex gap-3 mt-2">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-lg border-2 border-white/10 text-muted font-body hover:text-white transition-colors cursor-pointer">
+              <div className="flex gap-3 mt-1">
+                <button onClick={() => setShowModal(false)}
+                  className="flex-1 py-2 rounded-lg font-body text-sm cursor-pointer transition-all"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#64748B', background: 'transparent' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E2E8F0'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#64748B'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}>
                   Cancel
                 </button>
-                <button onClick={save} disabled={saving || !form.name.trim()} className="flex-1 btn-primary disabled:opacity-50">
-                  {saving ? 'Saving...' : editing ? 'UPDATE' : 'CREATE'}
+                <button onClick={save} disabled={saving || !form.name.trim()} className="flex-1 btn-neon disabled:opacity-50">
+                  {saving ? 'SAVING...' : editing ? 'UPDATE' : 'CREATE'}
                 </button>
               </div>
             </div>
