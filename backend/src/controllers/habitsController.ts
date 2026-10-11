@@ -213,6 +213,28 @@ export const getWeeklyRecap = async (req: AuthRequest, res: Response) => {
   res.json({ completionsThisWeek, weeklyGoal, xpEstimate, topHabit, totalHabits });
 };
 
+export const useStreakFreeze = async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const { habitId, date } = req.body;
+  // check freezes available
+  const userRes = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
+  if (!userRes.rows[0] || userRes.rows[0].streak_freeze_count <= 0) {
+    return res.status(400).json({ error: 'No streak freezes available' });
+  }
+  // verify habit belongs to user
+  const habitRes = await pool.query('SELECT id FROM habits WHERE id = $1 AND user_id = $2', [habitId, userId]);
+  if (!habitRes.rows[0]) return res.status(404).json({ error: 'Habit not found' });
+  // insert completion for that date (protect streak)
+  await pool.query(
+    'INSERT INTO habit_completions (habit_id, completed_date) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [habitId, date]
+  );
+  // decrement freeze count
+  await pool.query('UPDATE users SET streak_freeze_count = streak_freeze_count - 1 WHERE id = $1', [userId]);
+  const updatedUser = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
+  res.json({ freezesLeft: updatedUser.rows[0].streak_freeze_count, streakSaved: true });
+};
+
 export async function getStats(req: AuthRequest, res: Response): Promise<void> {
   try {
     const [habitsRes, totalRes, weekRes, userRes] = await Promise.all([

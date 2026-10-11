@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Zap, CheckCircle2, Circle, Star, Plus, Droplets } from 'lucide-react';
+import { Zap, CheckCircle2, Circle, Star, Plus, Droplets, Snowflake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import api from '../api/client';
@@ -89,6 +89,23 @@ export default function Dashboard() {
         setCompleted(p => { const s = new Set(p); s.delete(habit.id); return s; });
         await load();
       }
+    } catch (err) { console.error(err); }
+  };
+
+  const freezesLeft = user?.streak_freeze_count ?? 0;
+
+  const freezeHabit = async (e: React.MouseEvent, habit: Habit) => {
+    e.stopPropagation(); // don't trigger toggleHabit
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const date = yesterday.toISOString().split('T')[0];
+    try {
+      await api.post('/habits/streak-freeze', { habitId: habit.id, date });
+      const id = Date.now();
+      setXpPopups(p => [...p, { id, text: '❄️ Streak saved!' }]);
+      setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500);
+      await load();
+      await refreshUser();
     } catch (err) { console.error(err); }
   };
 
@@ -242,6 +259,19 @@ export default function Dashboard() {
                       <Droplets size={13} style={{ color: '#00F5FF' }} />
                       <span className="display text-sm neon-text-cyan">{habit.current_streak}</span>
                     </div>
+                  )}
+                  {!done && habit.current_streak > 0 && (
+                    <button
+                      onClick={(e) => freezeHabit(e, habit)}
+                      disabled={freezesLeft === 0}
+                      title={freezesLeft === 0 ? 'No freezes left' : `Use freeze (${freezesLeft} left)`}
+                      className="flex-shrink-0 p-1 rounded cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{ color: '#00F5FF', background: 'transparent', border: 'none' }}
+                      onMouseEnter={e => { if (freezesLeft > 0) (e.currentTarget as HTMLElement).style.background = 'rgba(0,245,255,0.1)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <Snowflake size={15} />
+                    </button>
                   )}
                 </div>
               );
