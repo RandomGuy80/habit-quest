@@ -3,7 +3,8 @@
     "allow": [
       "Skill(update-config)",
       "PowerShell(New-Item *)",
-      "PowerShell(gh auth *)"
+      "PowerShell(gh auth *)",
+      "PowerShell(docker exec habitquest-db *)"
     ]
   }
 }

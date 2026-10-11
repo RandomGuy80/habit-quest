@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: habitquest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: habitquest
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: habitquest123
+    ports:
+      - "5432:5432"
+    volumes:
+      - habitquest_data:/var/lib/postgresql/data
+
+volumes:
+  habitquest_data:
