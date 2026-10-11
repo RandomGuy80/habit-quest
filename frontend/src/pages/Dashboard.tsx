@@ -85,18 +85,18 @@ export default function Dashboard() {
       </div>
 
       {/* Header */}
-      <div className="mb-7">
-        <p className="display text-3xl text-white">
+      <div className="mb-6">
+        <p className="display text-2xl md:text-3xl text-white">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
         <p className="font-body text-sm italic mt-1" style={{ color: '#64748B' }}>"{quote}"</p>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 
         {/* Progress ring */}
-        <div className="neon-card p-5 flex items-center gap-5">
+        <div className="neon-card p-5 flex items-center gap-5 sm:col-span-1">
           <svg width="96" height="96" viewBox="0 0 96 96">
             <circle cx="48" cy="48" r="44" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6"/>
             <circle cx="48" cy="48" r="44" fill="none"

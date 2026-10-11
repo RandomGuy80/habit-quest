@@ -55,7 +55,7 @@ export default function Settings() {
       {/* Stats */}
       <div className="neon-card p-6 mb-4">
         <h3 className="display text-lg neon-text-purple mb-5 tracking-widest">ACCOUNT INFO</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
           <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)' }}>
             <Zap size={18} className="mx-auto mb-2" style={{ color: '#A78BFA' }} />
             <p className="display text-2xl neon-text-purple">{user?.xp}</p>

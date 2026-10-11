@@ -51,7 +51,7 @@ export default function Achievements() {
             <h3 className="display text-lg mb-3 tracking-widest" style={{ color: cfg.color, textShadow: `0 0 10px ${cfg.glow}` }}>
               {cfg.label}
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {group.map((a) => (
                 <div key={a.id}
                   className="rounded-xl p-4 transition-all"

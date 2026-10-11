@@ -62,7 +62,7 @@ export default function Stats() {
     <div className="max-w-4xl mx-auto">
       <h2 className="display text-3xl neon-text-purple mb-6">YOUR STATS</h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {statCards.map(({ label, value, suffix, icon: Icon, neon, textColor }) => (
           <div key={label} className={`${neon} p-4 text-center`}>
             <Icon size={22} className="mx-auto mb-2" style={{ color: textColor }} />
