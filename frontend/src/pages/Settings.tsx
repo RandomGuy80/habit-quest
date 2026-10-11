@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Zap, Star, Snowflake } from 'lucide-react';
+import { LogOut, User, Zap, Star, Snowflake, Bell } from 'lucide-react';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function Settings() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  const { permission, requestPermission, scheduleReminder, cancelReminder, isScheduled, reminderTime } = useNotifications();
+  const [hour, setHour] = useState<number>(reminderTime?.hour ?? 9);
+  const [minute, setMinute] = useState<number>(reminderTime?.minute ?? 0);
 
   const xpToNext = (user?.level ?? 1) * 100;
   const xpPct = Math.min(((user?.xp ?? 0) / xpToNext) * 100, 100);
@@ -72,6 +78,88 @@ export default function Settings() {
             <p className="text-xs font-body mt-1" style={{ color: '#64748B' }}>Freezes</p>
           </div>
         </div>
+      </div>
+
+      {/* Daily Reminders */}
+      <div className="neon-card p-6 mb-4">
+        <h3 className="display text-lg neon-text-purple mb-5 tracking-widest flex items-center gap-2">
+          <Bell size={18} style={{ color: '#A78BFA' }} />
+          DAILY REMINDERS
+        </h3>
+
+        {!('Notification' in window) ? (
+          <p className="font-body text-sm" style={{ color: '#64748B' }}>
+            Notifications not supported in this browser
+          </p>
+        ) : permission === 'denied' ? (
+          <div className="neon-card-pink p-4 rounded-xl">
+            <p className="font-body text-sm" style={{ color: '#FF3366' }}>
+              Notifications blocked — reset in your browser settings
+            </p>
+          </div>
+        ) : permission === 'default' ? (
+          <div className="flex flex-col gap-3">
+            <p className="font-body text-sm" style={{ color: '#64748B' }}>
+              Enable notifications to receive daily habit reminders.
+            </p>
+            <button
+              className="btn-neon w-fit"
+              onClick={requestPermission}
+            >
+              ENABLE REMINDERS
+            </button>
+          </div>
+        ) : (
+          /* permission === 'granted' */
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <label className="font-body text-xs tracking-widest" style={{ color: '#64748B' }}>HOUR</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={hour}
+                  onChange={e => setHour(Math.min(23, Math.max(0, Number(e.target.value))))}
+                  className="neon-input w-16 text-center"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="font-body text-xs tracking-widest" style={{ color: '#64748B' }}>MIN</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={minute}
+                  onChange={e => setMinute(Math.min(59, Math.max(0, Number(e.target.value))))}
+                  className="neon-input w-16 text-center"
+                />
+              </div>
+              <button
+                className="btn-neon"
+                onClick={() => scheduleReminder(hour, minute)}
+              >
+                SET REMINDER
+              </button>
+              {isScheduled && (
+                <button
+                  className="font-body text-sm cursor-pointer transition-colors"
+                  style={{ color: '#64748B', background: 'none', border: 'none', padding: 0 }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FF3366'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#64748B'; }}
+                  onClick={cancelReminder}
+                >
+                  CANCEL
+                </button>
+              )}
+            </div>
+            <p className="font-body text-sm" style={{ color: isScheduled ? '#00FF88' : '#64748B' }}>
+              {isScheduled && reminderTime
+                ? `Reminder set for ${String(reminderTime.hour).padStart(2, '0')}:${String(reminderTime.minute).padStart(2, '0')}`
+                : 'No reminder set'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Danger zone */}
