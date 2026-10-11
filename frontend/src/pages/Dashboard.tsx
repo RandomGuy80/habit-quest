@@ -29,18 +29,21 @@ export default function Dashboard() {
   const [xpPopups, setXpPopups] = useState<XPPopup[]>([]);
   const [levelUpData, setLevelUpData] = useState<{ level: number } | null>(null);
   const [bouncingId, setBouncingId] = useState<string | null>(null);
+  const [recap, setRecap] = useState<{ completionsThisWeek: number; weeklyGoal: number; xpEstimate: number; topHabit: string | null; totalHabits: number } | null>(null);
   const perfectFiredRef = useRef(false);
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[new Date().getDay() % quotes.length];
 
   const load = useCallback(async () => {
     try {
-      const [hRes, cRes] = await Promise.all([
+      const [hRes, cRes, recapRes] = await Promise.all([
         api.get('/habits'),
         api.get(`/habits/completions/today?date=${today}`),
+        api.get('/habits/stats/weekly-recap'),
       ]);
       setHabits(hRes.data);
       setCompleted(new Set(cRes.data));
+      setRecap(recapRes.data);
     } finally { setLoading(false); }
   }, [today]);
 
@@ -246,6 +249,42 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {recap !== null && recap.totalHabits > 0 && (
+        <div className="neon-card-cyan p-5 mt-4">
+          <h3 className="display text-lg neon-text-cyan mb-4 tracking-wider">WEEKLY RECAP</h3>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {/* completions */}
+            <div className="text-center">
+              <p className="display text-3xl neon-text-cyan">{recap.completionsThisWeek}</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>Completions</p>
+            </div>
+            {/* XP estimate */}
+            <div className="text-center">
+              <p className="display text-3xl neon-text-purple">~{recap.xpEstimate}</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>XP earned</p>
+            </div>
+            {/* goal % */}
+            <div className="text-center">
+              <p className="display text-3xl neon-text-green">{recap.weeklyGoal > 0 ? Math.round((recap.completionsThisWeek / recap.weeklyGoal) * 100) : 0}%</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>of goal</p>
+            </div>
+          </div>
+          {/* progress bar */}
+          <div className="w-full rounded-full h-1.5 overflow-hidden mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <div className="h-full rounded-full transition-all duration-700" style={{
+              width: `${recap.weeklyGoal > 0 ? Math.min((recap.completionsThisWeek / recap.weeklyGoal) * 100, 100) : 0}%`,
+              background: 'linear-gradient(90deg, #7C3AED, #00F5FF)',
+              boxShadow: '0 0 8px rgba(0,245,255,0.4)',
+            }} />
+          </div>
+          {recap.topHabit && (
+            <p className="text-xs font-body" style={{ color: '#64748B' }}>
+              Top habit: <span style={{ color: '#00F5FF' }}>{recap.topHabit}</span>
+            </p>
+          )}
+        </div>
+      )}
 
       <style>{`
         @keyframes xpFloat {

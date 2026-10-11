@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   getHabits, createHabit, updateHabit, deleteHabit,
   completeHabit, uncompleteHabit, getTodayCompletions,
-  getHeatmap, getStats,
+  getHeatmap, getStats, getWeeklyRecap,
 } from '../controllers/habitsController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -19,5 +19,6 @@ router.post('/:id/uncomplete', uncompleteHabit);
 router.get('/completions/today', getTodayCompletions);
 router.get('/stats/heatmap', getHeatmap);
 router.get('/stats/summary', getStats);
+router.get('/stats/weekly-recap', getWeeklyRecap);
 
 export default router;

@@ -184,6 +184,35 @@ export async function getHeatmap(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
+export const getWeeklyRecap = async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  // completions in last 7 days
+  const completionsRes = await pool.query(
+    `SELECT COUNT(*) as count FROM habit_completions hc
+     JOIN habits h ON h.id = hc.habit_id
+     WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'`,
+    [userId]
+  );
+  // total habits
+  const habitsRes = await pool.query(
+    `SELECT COUNT(*) as count FROM habits WHERE user_id = $1`, [userId]
+  );
+  // top habit this week
+  const topRes = await pool.query(
+    `SELECT h.name, COUNT(*) as cnt FROM habit_completions hc
+     JOIN habits h ON h.id = hc.habit_id
+     WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'
+     GROUP BY h.id, h.name ORDER BY cnt DESC LIMIT 1`,
+    [userId]
+  );
+  const completionsThisWeek = Number(completionsRes.rows[0].count);
+  const totalHabits = Number(habitsRes.rows[0].count);
+  const weeklyGoal = totalHabits * 7;
+  const xpEstimate = completionsThisWeek * 15;
+  const topHabit = topRes.rows[0]?.name ?? null;
+  res.json({ completionsThisWeek, weeklyGoal, xpEstimate, topHabit, totalHabits });
+};
+
 export async function getStats(req: AuthRequest, res: Response): Promise<void> {
   try {
     const [habitsRes, totalRes, weekRes, userRes] = await Promise.all([
