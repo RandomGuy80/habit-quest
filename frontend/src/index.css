@@ -7,8 +7,8 @@
 @layer base {
   * { box-sizing: border-box; }
   body {
-    background-color: #0F172A;
-    color: #F8FAFC;
+    background-color: #07090F;
+    color: #F1F5F9;
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
   }
@@ -19,41 +19,41 @@
     @apply bg-card rounded-xl border-2 border-primary;
     box-shadow: 4px 4px 0px #6366F1;
   }
-  .comic-card-streak {
-    @apply bg-card rounded-xl border-2 border-streak;
-    box-shadow: 4px 4px 0px #FBBF24;
+  .comic-card-accent {
+    @apply bg-card rounded-xl border-2 border-accent;
+    box-shadow: 4px 4px 0px #0891B2;
   }
   .comic-card-success {
     @apply bg-card rounded-xl border-2 border-success;
-    box-shadow: 4px 4px 0px #22C55E;
+    box-shadow: 4px 4px 0px #059669;
   }
   .comic-card-danger {
     @apply bg-card rounded-xl border-2 border-danger;
-    box-shadow: 4px 4px 0px #EF4444;
+    box-shadow: 4px 4px 0px #DC2626;
   }
   .btn-primary {
     @apply bg-primary text-white font-semibold px-4 py-2 rounded-lg border-2 border-primary-dark cursor-pointer transition-all;
-    box-shadow: 3px 3px 0px #4F46E5;
+    box-shadow: 3px 3px 0px #6366F1;
   }
   .btn-primary:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0px #4F46E5;
+    box-shadow: 4px 4px 0px #6366F1;
   }
   .btn-primary:active {
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px #4F46E5;
+    box-shadow: 1px 1px 0px #6366F1;
   }
-  .btn-streak {
-    @apply bg-streak text-gray-900 font-semibold px-4 py-2 rounded-lg border-2 cursor-pointer transition-all;
-    border-color: #D97706;
-    box-shadow: 3px 3px 0px #D97706;
+  .btn-accent {
+    @apply bg-accent text-gray-900 font-semibold px-4 py-2 rounded-lg border-2 cursor-pointer transition-all;
+    border-color: #0891B2;
+    box-shadow: 3px 3px 0px #0891B2;
   }
-  .btn-streak:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0px #D97706; }
-  .btn-streak:active { transform: translate(2px,2px); box-shadow: 1px 1px 0px #D97706; }
+  .btn-accent:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0px #0891B2; }
+  .btn-accent:active { transform: translate(2px,2px); box-shadow: 1px 1px 0px #0891B2; }
 
   .display-text { font-family: 'Bangers', cursive; letter-spacing: 0.05em; }
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0F172A; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #07090F; }
+::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }

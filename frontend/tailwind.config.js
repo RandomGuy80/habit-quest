@@ -4,15 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0F172A',
-        card: '#1E293B',
-        primary: '#6366F1',
-        'primary-dark': '#4F46E5',
-        streak: '#FBBF24',
-        success: '#22C55E',
+        bg: '#07090F',
+        card: '#0D1117',
+        'card-2': '#111827',
+        primary: '#818CF8',
+        'primary-dark': '#6366F1',
+        accent: '#22D3EE',
+        'accent-dark': '#0891B2',
+        success: '#10B981',
         danger: '#EF4444',
-        muted: '#94A3B8',
-        border: 'rgba(255,255,255,0.08)',
+        muted: '#64748B',
+        border: 'rgba(255,255,255,0.06)',
       },
       fontFamily: {
         display: ['Bangers', 'cursive'],

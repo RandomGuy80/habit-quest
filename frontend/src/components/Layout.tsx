@@ -21,33 +21,29 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="w-64 bg-card border-r-2 border-primary flex flex-col" style={{ boxShadow: '4px 0 0 #6366F1' }}>
-        {/* Logo */}
         <div className="p-6 border-b-2 border-primary">
           <h1 className="display-text text-4xl text-primary leading-none">HABIT</h1>
-          <h1 className="display-text text-4xl text-streak leading-none">QUEST</h1>
+          <h1 className="display-text text-4xl text-accent leading-none">QUEST</h1>
           <p className="text-xs text-muted mt-1 font-body">Level up your life</p>
         </div>
 
-        {/* User XP bar */}
         {user && (
-          <div className="p-4 border-b-2 border-white/10">
+          <div className="p-4 border-b-2 border-white/5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-muted font-body">Level {user.level}</span>
-              <span className="text-xs text-streak font-body">{user.xp} / {xpToNext} XP</span>
+              <span className="text-xs text-accent font-body">{user.xp} / {xpToNext} XP</span>
             </div>
-            <div className="w-full bg-bg rounded-full h-2 border border-white/20">
+            <div className="w-full bg-bg rounded-full h-2 border border-white/10">
               <div
-                className="h-full rounded-full bg-streak transition-all duration-500"
+                className="h-full rounded-full bg-accent transition-all duration-500"
                 style={{ width: `${xpPct}%` }}
               />
             </div>
-            <p className="text-sm font-semibold mt-1 font-body">{user.username}</p>
+            <p className="text-sm font-semibold mt-1 font-body text-white">{user.username}</p>
           </div>
         )}
 
-        {/* Nav */}
         <nav className="flex-1 p-4 flex flex-col gap-1">
           {nav.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -76,8 +72,7 @@ export default function Layout() {
         </button>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-6 bg-bg">
         <Outlet />
       </main>
     </div>

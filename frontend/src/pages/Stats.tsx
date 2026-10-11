@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Flame, Target, Trophy, TrendingUp } from 'lucide-react';
+import { Droplets, Target, Trophy, TrendingUp } from 'lucide-react';
 import api from '../api/client';
 
 interface HeatmapEntry { completed_date: string; count: number }
@@ -12,11 +12,11 @@ interface Stats {
 }
 
 function getHeatmapColor(count: number) {
-  if (count === 0) return '#1E293B';
-  if (count === 1) return '#312e81';
-  if (count === 2) return '#4338ca';
-  if (count === 3) return '#6366F1';
-  return '#818cf8';
+  if (count === 0) return '#0D1117';
+  if (count === 1) return '#0e4155';
+  if (count === 2) return '#0a7ea4';
+  if (count === 3) return '#22D3EE';
+  return '#67e8f9';
 }
 
 export default function Stats() {
@@ -26,8 +26,7 @@ export default function Stats() {
 
   useEffect(() => {
     Promise.all([api.get('/habits/stats/summary'), api.get('/habits/stats/heatmap')]).then(([s, h]) => {
-      setStats(s.data);
-      setHeatmap(h.data);
+      setStats(s.data); setHeatmap(h.data);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -38,13 +37,11 @@ export default function Stats() {
   );
   if (!stats) return null;
 
-  // build 52-week heatmap grid
   const heatmapMap = new Map(heatmap.map((e) => [e.completed_date.split('T')[0], Number(e.count)]));
   const today = new Date();
   const cells: { date: string; count: number }[] = [];
   for (let i = 364; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
+    const d = new Date(today); d.setDate(d.getDate() - i);
     const key = d.toISOString().split('T')[0];
     cells.push({ date: key, count: heatmapMap.get(key) || 0 });
   }
@@ -55,28 +52,27 @@ export default function Stats() {
   }));
 
   const statCards = [
-    { label: 'TOTAL HABITS', value: stats.totalHabits, icon: Target, color: 'primary' },
-    { label: 'TOTAL COMPLETIONS', value: stats.totalCompletions, icon: Trophy, color: 'streak' },
-    { label: 'BEST STREAK', value: `${stats.bestStreak}d`, icon: Flame, color: 'streak' },
-    { label: 'CURRENT STREAK', value: `${stats.currentStreak}d`, icon: TrendingUp, color: 'success' },
+    { label: 'TOTAL HABITS', value: stats.totalHabits, icon: Target, color: '#818CF8' },
+    { label: 'TOTAL COMPLETIONS', value: stats.totalCompletions, icon: Trophy, color: '#22D3EE' },
+    { label: 'BEST STREAK', value: `${stats.bestStreak}d`, icon: Droplets, color: '#22D3EE' },
+    { label: 'CURRENT STREAK', value: `${stats.currentStreak}d`, icon: TrendingUp, color: '#10B981' },
   ];
 
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="display-text text-3xl text-white mb-6">YOUR STATS</h2>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {statCards.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className={`comic-card p-4 text-center`}>
-            <Icon size={24} className={`mx-auto mb-2 text-${color}`} />
-            <p className={`display-text text-3xl text-${color}`}>{value}</p>
+          <div key={label} className="bg-card rounded-xl border-2 p-4 text-center"
+            style={{ borderColor: color, boxShadow: `4px 4px 0px ${color}50` }}>
+            <Icon size={24} className="mx-auto mb-2" style={{ color }} />
+            <p className="display-text text-3xl" style={{ color }}>{value}</p>
             <p className="text-xs text-muted font-body mt-1">{label}</p>
           </div>
         ))}
       </div>
 
-      {/* Weekly chart */}
       <div className="comic-card p-5 mb-6">
         <h3 className="display-text text-xl text-white mb-4">LAST 7 DAYS</h3>
         {chartData.length === 0 ? (
@@ -84,21 +80,20 @@ export default function Stats() {
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="day" tick={{ fill: '#94A3B8', fontSize: 12, fontFamily: 'Poppins' }} />
-              <YAxis tick={{ fill: '#94A3B8', fontSize: 12, fontFamily: 'Poppins' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#111827" />
+              <XAxis dataKey="day" tick={{ fill: '#64748B', fontSize: 12, fontFamily: 'Poppins' }} />
+              <YAxis tick={{ fill: '#64748B', fontSize: 12, fontFamily: 'Poppins' }} />
               <Tooltip
-                contentStyle={{ background: '#1E293B', border: '2px solid #6366F1', borderRadius: 8, fontFamily: 'Poppins', fontSize: 12 }}
-                labelStyle={{ color: '#F8FAFC' }}
-                itemStyle={{ color: '#6366F1' }}
+                contentStyle={{ background: '#0D1117', border: '2px solid #818CF8', borderRadius: 8, fontFamily: 'Poppins', fontSize: 12 }}
+                labelStyle={{ color: '#F1F5F9' }}
+                itemStyle={{ color: '#818CF8' }}
               />
-              <Bar dataKey="completions" fill="#6366F1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="completions" fill="#818CF8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
 
-      {/* Heatmap */}
       <div className="comic-card p-5">
         <h3 className="display-text text-xl text-white mb-4">ACTIVITY (PAST YEAR)</h3>
         <div className="overflow-x-auto">
@@ -110,9 +105,7 @@ export default function Stats() {
                   if (idx >= cells.length) return <div key={day} className="w-3 h-3" />;
                   const cell = cells[idx];
                   return (
-                    <div
-                      key={day}
-                      title={`${cell.date}: ${cell.count} completions`}
+                    <div key={day} title={`${cell.date}: ${cell.count} completions`}
                       className="w-3 h-3 rounded-sm border border-white/5"
                       style={{ background: getHeatmapColor(cell.count) }}
                     />

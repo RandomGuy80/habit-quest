@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Flame, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Droplets, X } from 'lucide-react';
 import api from '../api/client';
 
 interface Habit {
@@ -10,12 +10,12 @@ interface Habit {
 
 const CATEGORIES = ['General', 'Health', 'Mind', 'Work', 'Sport', 'Learning', 'Social'];
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
-const COLORS = ['#6366F1', '#22C55E', '#FBBF24', '#EF4444', '#EC4899', '#06B6D4', '#8B5CF6', '#F97316'];
+const COLORS = ['#818CF8', '#22D3EE', '#10B981', '#EF4444', '#EC4899', '#A78BFA', '#F97316', '#06B6D4'];
 const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
 
 const empty = {
   name: '', category: 'General', difficulty: 'medium',
-  color: '#6366F1', icon: 'star', notes: '',
+  color: '#818CF8', icon: 'star', notes: '',
   frequency: ['mon','tue','wed','thu','fri','sat','sun'],
 };
 
@@ -26,10 +26,7 @@ export default function Habits() {
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
-    const res = await api.get('/habits');
-    setHabits(res.data);
-  };
+  const load = async () => { const res = await api.get('/habits'); setHabits(res.data); };
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(empty); setEditing(null); setShowModal(true); };
@@ -51,16 +48,11 @@ export default function Habits() {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      if (editing) {
-        await api.put(`/habits/${editing.id}`, form);
-      } else {
-        await api.post('/habits', form);
-      }
+      if (editing) { await api.put(`/habits/${editing.id}`, form); }
+      else { await api.post('/habits', form); }
       setShowModal(false);
       await load();
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const remove = async (id: string) => {
@@ -86,7 +78,8 @@ export default function Habits() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {habits.map((h) => (
-            <div key={h.id} className="comic-card p-4" style={{ borderColor: h.color, boxShadow: `4px 4px 0px ${h.color}` }}>
+            <div key={h.id} className="bg-card rounded-xl border-2 p-4 transition-all"
+              style={{ borderColor: h.color, boxShadow: `4px 4px 0px ${h.color}40` }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-white font-body truncate">{h.name}</h3>
@@ -107,10 +100,10 @@ export default function Habits() {
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
                 <div className="flex items-center gap-1">
-                  <Flame size={14} className="text-streak" />
-                  <span className="display-text text-streak text-sm">{h.current_streak} streak</span>
+                  <Droplets size={14} className="text-accent" />
+                  <span className="display-text text-accent text-sm">{h.current_streak} streak</span>
                 </div>
                 <span className="text-xs text-muted font-body">{h.total_completions} total</span>
               </div>
@@ -119,9 +112,8 @@ export default function Habits() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="comic-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="display-text text-2xl text-white">{editing ? 'EDIT HABIT' : 'NEW HABIT'}</h3>
@@ -134,7 +126,7 @@ export default function Habits() {
                 <input
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-bg border-2 border-white/20 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
+                  className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary"
                   placeholder="e.g. Morning workout"
                 />
               </div>
@@ -145,7 +137,7 @@ export default function Habits() {
                   <select
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="w-full bg-bg border-2 border-white/20 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
                   >
                     {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -155,7 +147,7 @@ export default function Habits() {
                   <select
                     value={form.difficulty}
                     onChange={(e) => setForm((f) => ({ ...f, difficulty: e.target.value }))}
-                    className="w-full bg-bg border-2 border-white/20 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary cursor-pointer"
                   >
                     {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -166,9 +158,7 @@ export default function Habits() {
                 <label className="text-xs text-muted font-body block mb-2">COLOR</label>
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setForm((f) => ({ ...f, color: c }))}
+                    <button key={c} onClick={() => setForm((f) => ({ ...f, color: c }))}
                       className="w-7 h-7 rounded-full border-2 cursor-pointer transition-transform hover:scale-110"
                       style={{ background: c, borderColor: form.color === c ? 'white' : 'transparent' }}
                     />
@@ -180,13 +170,11 @@ export default function Habits() {
                 <label className="text-xs text-muted font-body block mb-2">DAYS</label>
                 <div className="flex gap-2">
                   {DAYS.map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => toggleDay(d)}
+                    <button key={d} onClick={() => toggleDay(d)}
                       className={`flex-1 py-1.5 rounded-lg text-xs font-body font-semibold border-2 cursor-pointer transition-all uppercase ${
                         form.frequency.includes(d)
                           ? 'bg-primary border-primary-dark text-white'
-                          : 'bg-bg border-white/20 text-muted'
+                          : 'bg-bg border-white/10 text-muted'
                       }`}
                     >{d.slice(0, 1)}</button>
                   ))}
@@ -198,14 +186,13 @@ export default function Habits() {
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  className="w-full bg-bg border-2 border-white/20 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary resize-none"
-                  rows={2}
-                  placeholder="Any notes..."
+                  className="w-full bg-bg border-2 border-white/10 rounded-lg px-3 py-2 text-white font-body focus:outline-none focus:border-primary resize-none"
+                  rows={2} placeholder="Any notes..."
                 />
               </div>
 
               <div className="flex gap-3 mt-2">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-lg border-2 border-white/20 text-muted font-body hover:text-white hover:border-white/40 transition-colors cursor-pointer">
+                <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-lg border-2 border-white/10 text-muted font-body hover:text-white transition-colors cursor-pointer">
                   Cancel
                 </button>
                 <button onClick={save} disabled={saving || !form.name.trim()} className="flex-1 btn-primary disabled:opacity-50">

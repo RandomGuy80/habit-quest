@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Flame, Zap, CheckCircle2, Circle, Star, Plus } from 'lucide-react';
+import { Zap, CheckCircle2, Circle, Star, Plus, Droplets } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuthStore } from '../store/authStore';
@@ -26,7 +26,6 @@ export default function Dashboard() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [xpPopups, setXpPopups] = useState<XPPopup[]>([]);
-  const [newBadges, setNewBadges] = useState<string[]>([]);
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[new Date().getDay() % quotes.length];
 
@@ -53,7 +52,7 @@ export default function Dashboard() {
         const { xpGained, xp, level, leveledUp } = res.data;
         updateXP(xp, level);
         const popupId = Date.now();
-        setXpPopups((prev) => [...prev, { id: popupId, text: `+${xpGained} XP${leveledUp ? ' 🎉 LEVEL UP!' : ''}` }]);
+        setXpPopups((prev) => [...prev, { id: popupId, text: `+${xpGained} XP${leveledUp ? ' ⚡ LEVEL UP!' : ''}` }]);
         setTimeout(() => setXpPopups((prev) => prev.filter((p) => p.id !== popupId)), 2500);
         setCompleted((prev) => new Set([...prev, habit.id]));
         await load();
@@ -63,15 +62,12 @@ export default function Dashboard() {
         setCompleted((prev) => { const s = new Set(prev); s.delete(habit.id); return s; });
         await load();
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const completedCount = habits.filter((h) => completed.has(h.id)).length;
   const pct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
   const maxStreak = habits.reduce((m, h) => Math.max(m, h.current_streak), 0);
-
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (pct / 100) * circumference;
 
@@ -86,19 +82,11 @@ export default function Dashboard() {
       {/* XP popups */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {xpPopups.map((p) => (
-          <div key={p.id} className="comic-card-streak px-4 py-2 display-text text-streak text-xl animate-bounce">
+          <div key={p.id} className="comic-card-accent px-4 py-2 display-text text-accent text-xl animate-bounce">
             {p.text}
           </div>
         ))}
       </div>
-
-      {/* Badge unlocked notifications */}
-      {newBadges.map((b, i) => (
-        <div key={i} className="fixed bottom-4 right-4 z-50 comic-card-streak px-4 py-3">
-          <p className="display-text text-streak text-lg">BADGE UNLOCKED!</p>
-          <p className="text-sm text-white font-body">{b}</p>
-        </div>
-      ))}
 
       {/* Header */}
       <div className="mb-6">
@@ -113,10 +101,10 @@ export default function Dashboard() {
         {/* Progress ring */}
         <div className="comic-card p-5 flex items-center gap-4">
           <svg width="100" height="100" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="#1E293B" strokeWidth="8"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#0D1117" strokeWidth="8"/>
             <circle
               cx="50" cy="50" r="45" fill="none"
-              stroke={pct === 100 ? '#22C55E' : '#6366F1'} strokeWidth="8"
+              stroke={pct === 100 ? '#10B981' : '#818CF8'} strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -135,10 +123,10 @@ export default function Dashboard() {
         </div>
 
         {/* Streak */}
-        <div className="comic-card-streak p-5 flex items-center gap-4">
-          <Flame size={48} className="text-streak flex-shrink-0" />
+        <div className="comic-card-accent p-5 flex items-center gap-4">
+          <Droplets size={48} className="text-accent flex-shrink-0" />
           <div>
-            <p className="display-text text-5xl text-streak leading-none">{maxStreak}</p>
+            <p className="display-text text-5xl text-accent leading-none">{maxStreak}</p>
             <p className="text-muted text-sm font-body">Best streak (days)</p>
           </div>
         </div>
@@ -146,14 +134,14 @@ export default function Dashboard() {
         {/* Level */}
         <div className="comic-card p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Star size={20} className="text-streak" />
-            <span className="display-text text-streak text-xl">LEVEL {user?.level}</span>
+            <Star size={20} className="text-accent" />
+            <span className="display-text text-accent text-xl">LEVEL {user?.level}</span>
           </div>
           <div className="flex items-center gap-2 mb-1">
             <Zap size={14} className="text-primary" />
             <span className="text-sm text-muted font-body">{user?.xp} / {(user?.level ?? 1) * 100} XP</span>
           </div>
-          <div className="w-full bg-bg rounded-full h-2 border border-white/20">
+          <div className="w-full bg-bg rounded-full h-2 border border-white/10">
             <div
               className="h-full rounded-full bg-primary transition-all duration-500"
               style={{ width: `${Math.min(((user?.xp ?? 0) / ((user?.level ?? 1) * 100)) * 100, 100)}%` }}
@@ -189,10 +177,10 @@ export default function Dashboard() {
                   onClick={() => toggleHabit(habit)}
                   className={`flex items-center gap-4 p-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
                     done
-                      ? 'border-success bg-success/10'
-                      : 'border-white/10 bg-bg hover:border-primary hover:bg-primary/5'
+                      ? 'border-success bg-success/5'
+                      : 'border-white/5 bg-card-2 hover:border-primary hover:bg-primary/5'
                   }`}
-                  style={{ boxShadow: done ? '3px 3px 0px #22C55E' : '3px 3px 0px rgba(255,255,255,0.05)' }}
+                  style={{ boxShadow: done ? '3px 3px 0px #059669' : '3px 3px 0px rgba(255,255,255,0.03)' }}
                 >
                   {done
                     ? <CheckCircle2 size={24} className="text-success flex-shrink-0" />
@@ -212,8 +200,8 @@ export default function Dashboard() {
                   </div>
                   {habit.current_streak > 0 && (
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <Flame size={14} className="text-streak" />
-                      <span className="display-text text-streak text-sm">{habit.current_streak}</span>
+                      <Droplets size={14} className="text-accent" />
+                      <span className="display-text text-accent text-sm">{habit.current_streak}</span>
                     </div>
                   )}
                 </div>
