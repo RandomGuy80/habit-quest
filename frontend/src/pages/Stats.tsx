@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Droplets, Target, Trophy, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 
 interface HeatmapEntry { completed_date: string; count: number }
@@ -20,6 +21,7 @@ function getHeatmapColor(count: number) {
 }
 
 export default function Stats() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function Stats() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="display text-4xl neon-text-purple animate-pulse">LOADING...</div>
+      <div className="display text-4xl neon-text-purple animate-pulse">{t('common.loading')}</div>
     </div>
   );
   if (!stats) return null;
@@ -52,15 +54,15 @@ export default function Stats() {
   }));
 
   const statCards = [
-    { label: 'TOTAL HABITS', value: stats.totalHabits, icon: Target, neon: 'neon-card', textColor: '#A78BFA' },
-    { label: 'COMPLETIONS', value: stats.totalCompletions, icon: Trophy, neon: 'neon-card-cyan', textColor: '#00F5FF' },
-    { label: 'BEST STREAK', value: `${stats.bestStreak}`, suffix: 'd', icon: Droplets, neon: 'neon-card-cyan', textColor: '#00F5FF' },
-    { label: 'CURRENT STREAK', value: `${stats.currentStreak}`, suffix: 'd', icon: TrendingUp, neon: 'neon-card-success', textColor: '#00FF88' },
+    { label: t('stats.totalHabits'), value: stats.totalHabits, icon: Target, neon: 'neon-card', textColor: '#A78BFA' },
+    { label: t('stats.completions'), value: stats.totalCompletions, icon: Trophy, neon: 'neon-card-cyan', textColor: '#00F5FF' },
+    { label: t('stats.bestStreak'), value: `${stats.bestStreak}`, suffix: 'd', icon: Droplets, neon: 'neon-card-cyan', textColor: '#00F5FF' },
+    { label: t('stats.currentStreak'), value: `${stats.currentStreak}`, suffix: 'd', icon: TrendingUp, neon: 'neon-card-success', textColor: '#00FF88' },
   ];
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="display text-3xl neon-text-purple mb-6">YOUR STATS</h2>
+      <h2 className="display text-3xl neon-text-purple mb-6">{t('stats.title')}</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {statCards.map(({ label, value, suffix, icon: Icon, neon, textColor }) => (
@@ -75,9 +77,9 @@ export default function Stats() {
       </div>
 
       <div className="neon-card p-5 mb-6">
-        <h3 className="display text-xl neon-text-purple mb-5">LAST 7 DAYS</h3>
+        <h3 className="display text-xl neon-text-purple mb-5">{t('stats.last7days')}</h3>
         {chartData.length === 0 ? (
-          <p className="font-body text-center py-8" style={{ color: '#64748B' }}>No data yet — start completing habits!</p>
+          <p className="font-body text-center py-8" style={{ color: '#64748B' }}>{t('stats.noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
@@ -107,7 +109,7 @@ export default function Stats() {
       </div>
 
       <div className="neon-card p-5">
-        <h3 className="display text-xl neon-text-purple mb-5">ACTIVITY — PAST YEAR</h3>
+        <h3 className="display text-xl neon-text-purple mb-5">{t('stats.activityYear')}</h3>
         <div className="overflow-x-auto">
           <div className="flex gap-1" style={{ minWidth: 700 }}>
             {Array.from({ length: 53 }).map((_, week) => (
@@ -131,11 +133,11 @@ export default function Stats() {
             ))}
           </div>
           <div className="flex items-center gap-2 mt-4 justify-end">
-            <span className="text-xs font-body" style={{ color: '#64748B' }}>Less</span>
+            <span className="text-xs font-body" style={{ color: '#64748B' }}>{t('stats.less')}</span>
             {[0, 1, 2, 3, 4].map((n) => (
               <div key={n} className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(n), border: '1px solid rgba(255,255,255,0.04)' }} />
             ))}
-            <span className="text-xs font-body" style={{ color: '#64748B' }}>More</span>
+            <span className="text-xs font-body" style={{ color: '#64748B' }}>{t('stats.more')}</span>
           </div>
         </div>
       </div>

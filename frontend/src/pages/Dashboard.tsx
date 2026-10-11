@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Zap, CheckCircle2, Circle, Star, Plus, Droplets, Snowflake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import LevelUpOverlay from '../components/LevelUpOverlay';
@@ -21,6 +22,7 @@ const quotes = [
 ];
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, refreshUser, updateXP } = useAuthStore();
   const navigate = useNavigate();
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -106,7 +108,7 @@ export default function Dashboard() {
     try {
       await api.post('/habits/streak-freeze', { habitId: habit.id, date });
       const id = Date.now();
-      setXpPopups(p => [...p, { id, text: '❄️ Streak saved!' }]);
+      setXpPopups(p => [...p, { id, text: t('freezes.saved') }]);
       setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500);
       await load();
       await refreshUser();
@@ -119,7 +121,7 @@ export default function Dashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
-      <div className="display text-4xl neon-text-purple animate-pulse">LOADING...</div>
+      <div className="display text-4xl neon-text-purple animate-pulse">{t('common.loading')}</div>
     </div>
   );
 
@@ -168,13 +170,13 @@ export default function Dashboard() {
               </linearGradient>
             </defs>
             <text x="48" y="44" textAnchor="middle" fill="white" fontSize="18" fontFamily="Russo One">{pct}%</text>
-            <text x="48" y="60" textAnchor="middle" fill="#64748B" fontSize="10" fontFamily="Chakra Petch">today</text>
+            <text x="48" y="60" textAnchor="middle" fill="#64748B" fontSize="10" fontFamily="Chakra Petch">{t('dashboard.today')}</text>
           </svg>
           <div>
             <p className="display text-3xl text-white">{completedCount}<span className="text-muted text-xl">/{habits.length}</span></p>
-            <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>Completed</p>
+            <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.completed')}</p>
             {pct === 100 && habits.length > 0 && (
-              <p className="display text-sm neon-text-green mt-1" style={{ animation: 'perfectPulse 1.5s ease infinite' }}>PERFECT DAY!</p>
+              <p className="display text-sm neon-text-green mt-1" style={{ animation: 'perfectPulse 1.5s ease infinite' }}>{t('dashboard.perfectDay')}</p>
             )}
           </div>
         </div>
@@ -187,7 +189,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="display text-5xl neon-text-cyan leading-none">{maxStreak}</p>
-            <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>Best streak</p>
+            <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.bestStreak')}</p>
           </div>
         </div>
 
@@ -195,7 +197,7 @@ export default function Dashboard() {
         <div className="neon-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Star size={16} style={{ color: '#A78BFA' }} />
-            <span className="display text-lg neon-text-purple">LEVEL {user?.level}</span>
+            <span className="display text-lg neon-text-purple">{t('common.level')} {user?.level}</span>
           </div>
           <div className="w-full rounded-full h-2 overflow-hidden mb-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <div className="h-full rounded-full transition-all duration-700" style={{
@@ -206,7 +208,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-1 mt-1">
             <Zap size={12} style={{ color: '#A78BFA' }} />
-            <span className="text-xs font-body" style={{ color: '#64748B' }}>{user?.xp} / {(user?.level ?? 1) * 100} XP</span>
+            <span className="text-xs font-body" style={{ color: '#64748B' }}>{user?.xp} / {(user?.level ?? 1) * 100} {t('common.xp')}</span>
           </div>
         </div>
       </div>
@@ -214,17 +216,17 @@ export default function Dashboard() {
       {/* Habits */}
       <div className="neon-card p-5">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="display text-xl text-white tracking-wider">TODAY'S QUESTS</h3>
+          <h3 className="display text-xl text-white tracking-wider">{t('dashboard.todaysQuests')}</h3>
           <button onClick={() => navigate('/habits')} className="btn-neon flex items-center gap-1.5 px-3 py-1.5 text-xs">
-            <Plus size={13} /> ADD HABIT
+            <Plus size={13} /> {t('dashboard.addHabit')}
           </button>
         </div>
 
         {habits.length === 0 ? (
           <div className="text-center py-12">
-            <p className="display text-2xl neon-text-purple mb-2">NO HABITS YET!</p>
-            <p className="text-sm font-body mb-5" style={{ color: '#64748B' }}>Add your first quest to begin</p>
-            <button onClick={() => navigate('/habits')} className="btn-neon">CREATE FIRST HABIT →</button>
+            <p className="display text-2xl neon-text-purple mb-2">{t('dashboard.noHabits')}</p>
+            <p className="text-sm font-body mb-5" style={{ color: '#64748B' }}>{t('dashboard.noHabitsDesc')}</p>
+            <button onClick={() => navigate('/habits')} className="btn-neon">{t('dashboard.createFirst')}</button>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -262,6 +264,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Droplets size={13} style={{ color: '#00F5FF' }} />
                       <span className="display text-sm neon-text-cyan">{habit.current_streak}</span>
+                      <span className="text-xs font-body" style={{ color: '#64748B' }}>{t('common.streak')}</span>
                     </div>
                   )}
                   {!done && habit.current_streak > 0 && (
@@ -286,22 +289,22 @@ export default function Dashboard() {
 
       {recap !== null && recap.totalHabits > 0 && (
         <div className="neon-card-cyan p-5 mt-4">
-          <h3 className="display text-lg neon-text-cyan mb-4 tracking-wider">WEEKLY RECAP</h3>
+          <h3 className="display text-lg neon-text-cyan mb-4 tracking-wider">{t('dashboard.weeklyRecap')}</h3>
           <div className="grid grid-cols-3 gap-3 mb-4">
             {/* completions */}
             <div className="text-center">
               <p className="display text-3xl neon-text-cyan">{recap.completionsThisWeek}</p>
-              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>Completions</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.completions')}</p>
             </div>
             {/* XP estimate */}
             <div className="text-center">
               <p className="display text-3xl neon-text-purple">~{recap.xpEstimate}</p>
-              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>XP earned</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.xpEarned')}</p>
             </div>
             {/* goal % */}
             <div className="text-center">
               <p className="display text-3xl neon-text-green">{recap.weeklyGoal > 0 ? Math.round((recap.completionsThisWeek / recap.weeklyGoal) * 100) : 0}%</p>
-              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>of goal</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.ofGoal')}</p>
             </div>
           </div>
           {/* progress bar */}
@@ -314,7 +317,7 @@ export default function Dashboard() {
           </div>
           {recap.topHabit && (
             <p className="text-xs font-body" style={{ color: '#64748B' }}>
-              Top habit: <span style={{ color: '#00F5FF' }}>{recap.topHabit}</span>
+              {t('dashboard.topHabit')}: <span style={{ color: '#00F5FF' }}>{recap.topHabit}</span>
             </p>
           )}
         </div>

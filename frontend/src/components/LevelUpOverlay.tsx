@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   level: number;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function LevelUpOverlay({ level, onDone }: Props) {
+  const { t } = useTranslation();
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function LevelUpOverlay({ level, onDone }: Props) {
         <div className="flex items-center justify-center mb-4">
           <Zap size={48} style={{ color: '#B026FF', filter: 'drop-shadow(0 0 20px #B026FF)' }} />
         </div>
-        <p className="display text-2xl tracking-widest mb-2" style={{ color: '#64748B' }}>LEVEL UP!</p>
+        <p className="display text-2xl tracking-widest mb-2" style={{ color: '#64748B' }}>{t('levelUp.levelUp')}</p>
         <p className="display leading-none" style={{
           fontSize: 'clamp(5rem, 20vw, 9rem)',
           background: 'linear-gradient(135deg, #A78BFA 0%, #00F5FF 100%)',
@@ -46,8 +48,8 @@ export default function LevelUpOverlay({ level, onDone }: Props) {
           backgroundClip: 'text',
           filter: 'drop-shadow(0 0 30px rgba(167,139,250,0.6))',
         }}>{level}</p>
-        <p className="display text-xl tracking-widest mt-3 neon-text-cyan">LEVEL {level} REACHED</p>
-        <p className="font-body text-sm mt-4" style={{ color: '#475569' }}>Tap to continue</p>
+        <p className="display text-xl tracking-widest mt-3 neon-text-cyan">{t('levelUp.reached', { level })}</p>
+        <p className="font-body text-sm mt-4" style={{ color: '#475569' }}>{t('levelUp.tap')}</p>
       </div>
 
       <style>{`

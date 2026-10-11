@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, Droplets, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 
 interface Habit {
@@ -26,6 +27,7 @@ const diffStyle = (d: string) => ({
 }[d] ?? {});
 
 export default function Habits() {
+  const { t } = useTranslation();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Habit | null>(null);
@@ -61,7 +63,7 @@ export default function Habits() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Delete this habit?')) return;
+    if (!confirm(t('habits.deleteConfirm'))) return;
     await api.delete(`/habits/${id}`);
     await load();
   };
@@ -69,17 +71,17 @@ export default function Habits() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="display text-3xl neon-text-purple">MY HABITS</h2>
+        <h2 className="display text-3xl neon-text-purple">{t('habits.title')}</h2>
         <button onClick={openNew} className="btn-neon flex items-center gap-2">
-          <Plus size={15} /> ADD HABIT
+          <Plus size={15} /> {t('habits.addHabit')}
         </button>
       </div>
 
       {habits.length === 0 ? (
         <div className="neon-card p-12 text-center">
-          <p className="display text-3xl neon-text-purple mb-2">NO HABITS YET!</p>
-          <p className="text-sm font-body mt-2 mb-6" style={{ color: '#64748B' }}>Create your first quest and start leveling up</p>
-          <button onClick={openNew} className="btn-neon">CREATE YOUR FIRST →</button>
+          <p className="display text-3xl neon-text-purple mb-2">{t('habits.noHabits')}</p>
+          <p className="text-sm font-body mt-2 mb-6" style={{ color: '#64748B' }}>{t('habits.noHabitsDesc')}</p>
+          <button onClick={openNew} className="btn-neon">{t('habits.createFirst')}</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,9 +124,9 @@ export default function Habits() {
                 <div className="flex items-center gap-1.5">
                   <Droplets size={13} style={{ color: '#00F5FF' }} />
                   <span className="display text-sm neon-text-cyan">{h.current_streak}</span>
-                  <span className="text-xs font-body" style={{ color: '#64748B' }}>streak</span>
+                  <span className="text-xs font-body" style={{ color: '#64748B' }}>{t('common.streak')}</span>
                 </div>
-                <span className="text-xs font-body" style={{ color: '#64748B' }}>{h.total_completions} total</span>
+                <span className="text-xs font-body" style={{ color: '#64748B' }}>{h.total_completions} {t('common.total')}</span>
               </div>
             </div>
           ))}
@@ -135,7 +137,7 @@ export default function Habits() {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="neon-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="display text-2xl neon-text-purple">{editing ? 'EDIT HABIT' : 'NEW HABIT'}</h3>
+              <h3 className="display text-2xl neon-text-purple">{editing ? t('habits.editHabit') : t('habits.newHabit')}</h3>
               <button onClick={() => setShowModal(false)}
                 className="cursor-pointer transition-colors"
                 style={{ color: '#64748B' }}
@@ -147,17 +149,17 @@ export default function Habits() {
 
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>HABIT NAME *</label>
+                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>{t('habits.name')}</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="neon-input" placeholder="e.g. Morning workout"
+                  className="neon-input" placeholder={t('habits.namePlaceholder')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>CATEGORY</label>
+                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>{t('habits.category')}</label>
                   <select
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
@@ -168,7 +170,7 @@ export default function Habits() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>DIFFICULTY</label>
+                  <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>{t('habits.difficulty')}</label>
                   <select
                     value={form.difficulty}
                     onChange={(e) => setForm((f) => ({ ...f, difficulty: e.target.value }))}
@@ -181,7 +183,7 @@ export default function Habits() {
               </div>
 
               <div>
-                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>COLOR</label>
+                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>{t('habits.color')}</label>
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map((c) => (
                     <button key={c} onClick={() => setForm((f) => ({ ...f, color: c }))}
@@ -198,7 +200,7 @@ export default function Habits() {
               </div>
 
               <div>
-                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>DAYS</label>
+                <label className="text-xs font-body tracking-widest block mb-2" style={{ color: '#64748B' }}>{t('habits.days')}</label>
                 <div className="flex gap-1.5">
                   {DAYS.map((d) => (
                     <button key={d} onClick={() => toggleDay(d)}
@@ -219,12 +221,12 @@ export default function Habits() {
               </div>
 
               <div>
-                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>NOTES (optional)</label>
+                <label className="text-xs font-body tracking-widest block mb-1.5" style={{ color: '#64748B' }}>{t('habits.notes')}</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                   className="neon-input resize-none"
-                  rows={2} placeholder="Any notes..."
+                  rows={2} placeholder={t('habits.notesPlaceholder')}
                 />
               </div>
 
@@ -234,10 +236,10 @@ export default function Habits() {
                   style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#64748B', background: 'transparent' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E2E8F0'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#64748B'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button onClick={save} disabled={saving || !form.name.trim()} className="flex-1 btn-neon disabled:opacity-50">
-                  {saving ? 'SAVING...' : editing ? 'UPDATE' : 'CREATE'}
+                  {saving ? t('common.saving') : editing ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </div>
