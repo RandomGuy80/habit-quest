@@ -185,54 +185,58 @@ export async function getHeatmap(req: AuthRequest, res: Response): Promise<void>
 }
 
 export const getWeeklyRecap = async (req: AuthRequest, res: Response) => {
-  const userId = req.userId!;
-  // completions in last 7 days
-  const completionsRes = await pool.query(
-    `SELECT COUNT(*) as count FROM habit_completions hc
-     JOIN habits h ON h.id = hc.habit_id
-     WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'`,
-    [userId]
-  );
-  // total habits
-  const habitsRes = await pool.query(
-    `SELECT COUNT(*) as count FROM habits WHERE user_id = $1`, [userId]
-  );
-  // top habit this week
-  const topRes = await pool.query(
-    `SELECT h.name, COUNT(*) as cnt FROM habit_completions hc
-     JOIN habits h ON h.id = hc.habit_id
-     WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'
-     GROUP BY h.id, h.name ORDER BY cnt DESC LIMIT 1`,
-    [userId]
-  );
-  const completionsThisWeek = Number(completionsRes.rows[0].count);
-  const totalHabits = Number(habitsRes.rows[0].count);
-  const weeklyGoal = totalHabits * 7;
-  const xpEstimate = completionsThisWeek * 15;
-  const topHabit = topRes.rows[0]?.name ?? null;
-  res.json({ completionsThisWeek, weeklyGoal, xpEstimate, topHabit, totalHabits });
+  try {
+    const userId = req.userId!;
+    const [completionsRes, habitsRes, topRes] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*) as count FROM habit_completions hc
+         JOIN habits h ON h.id = hc.habit_id
+         WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'`,
+        [userId]
+      ),
+      pool.query(`SELECT COUNT(*) as count FROM habits WHERE user_id = $1 AND archived = false`, [userId]),
+      pool.query(
+        `SELECT h.name, COUNT(*) as cnt FROM habit_completions hc
+         JOIN habits h ON h.id = hc.habit_id
+         WHERE h.user_id = $1 AND hc.completed_date >= NOW() - INTERVAL '7 days'
+         GROUP BY h.id, h.name ORDER BY cnt DESC LIMIT 1`,
+        [userId]
+      ),
+    ]);
+    const completionsThisWeek = Number(completionsRes.rows[0].count);
+    const totalHabits = Number(habitsRes.rows[0].count);
+    res.json({
+      completionsThisWeek,
+      weeklyGoal: totalHabits * 7,
+      xpEstimate: completionsThisWeek * 15,
+      topHabit: topRes.rows[0]?.name ?? null,
+      totalHabits,
+    });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
 };
 
 export const useStreakFreeze = async (req: AuthRequest, res: Response) => {
-  const userId = req.userId!;
-  const { habitId, date } = req.body;
-  // check freezes available
-  const userRes = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
-  if (!userRes.rows[0] || userRes.rows[0].streak_freeze_count <= 0) {
-    return res.status(400).json({ error: 'No streak freezes available' });
+  try {
+    const userId = req.userId!;
+    const { habitId, date } = req.body;
+    const userRes = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
+    if (!userRes.rows[0] || userRes.rows[0].streak_freeze_count <= 0) {
+      return res.status(400).json({ error: 'No streak freezes available' });
+    }
+    const habitRes = await pool.query('SELECT id FROM habits WHERE id = $1 AND user_id = $2', [habitId, userId]);
+    if (!habitRes.rows[0]) return res.status(404).json({ error: 'Habit not found' });
+    await pool.query(
+      'INSERT INTO habit_completions (habit_id, user_id, completed_date) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+      [habitId, userId, date]
+    );
+    await pool.query('UPDATE users SET streak_freeze_count = streak_freeze_count - 1 WHERE id = $1', [userId]);
+    const updatedUser = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
+    res.json({ freezesLeft: updatedUser.rows[0].streak_freeze_count, streakSaved: true });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
   }
-  // verify habit belongs to user
-  const habitRes = await pool.query('SELECT id FROM habits WHERE id = $1 AND user_id = $2', [habitId, userId]);
-  if (!habitRes.rows[0]) return res.status(404).json({ error: 'Habit not found' });
-  // insert completion for that date (protect streak)
-  await pool.query(
-    'INSERT INTO habit_completions (habit_id, completed_date) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-    [habitId, date]
-  );
-  // decrement freeze count
-  await pool.query('UPDATE users SET streak_freeze_count = streak_freeze_count - 1 WHERE id = $1', [userId]);
-  const updatedUser = await pool.query('SELECT streak_freeze_count FROM users WHERE id = $1', [userId]);
-  res.json({ freezesLeft: updatedUser.rows[0].streak_freeze_count, streakSaved: true });
 };
 
 export async function getStats(req: AuthRequest, res: Response): Promise<void> {
