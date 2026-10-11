@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    background-color: #0F172A;
+    color: #F8FAFC;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .comic-card {
+    @apply bg-card rounded-xl border-2 border-primary;
+    box-shadow: 4px 4px 0px #6366F1;
+  }
+  .comic-card-streak {
+    @apply bg-card rounded-xl border-2 border-streak;
+    box-shadow: 4px 4px 0px #FBBF24;
+  }
+  .comic-card-success {
+    @apply bg-card rounded-xl border-2 border-success;
+    box-shadow: 4px 4px 0px #22C55E;
+  }
+  .comic-card-danger {
+    @apply bg-card rounded-xl border-2 border-danger;
+    box-shadow: 4px 4px 0px #EF4444;
+  }
+  .btn-primary {
+    @apply bg-primary text-white font-semibold px-4 py-2 rounded-lg border-2 border-primary-dark cursor-pointer transition-all;
+    box-shadow: 3px 3px 0px #4F46E5;
+  }
+  .btn-primary:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #4F46E5;
+  }
+  .btn-primary:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #4F46E5;
+  }
+  .btn-streak {
+    @apply bg-streak text-gray-900 font-semibold px-4 py-2 rounded-lg border-2 cursor-pointer transition-all;
+    border-color: #D97706;
+    box-shadow: 3px 3px 0px #D97706;
+  }
+  .btn-streak:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0px #D97706; }
+  .btn-streak:active { transform: translate(2px,2px); box-shadow: 1px 1px 0px #D97706; }
+
+  .display-text { font-family: 'Bangers', cursive; letter-spacing: 0.05em; }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0F172A; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
