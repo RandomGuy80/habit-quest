@@ -111,12 +111,34 @@ export async function completeHabit(req: AuthRequest, res: Response): Promise<vo
       [streak, bestStreak, totalCompletions, id]
     );
 
-    const xpGain = XP_MAP[habit.difficulty as keyof typeof XP_MAP] || 20;
+    // Count completions today (current insert already committed)
+    const [todayRes, totalHabitsRes] = await Promise.all([
+      pool.query(
+        'SELECT COUNT(*) as count FROM habit_completions WHERE user_id=$1 AND completed_date=$2',
+        [req.userId, date]
+      ),
+      pool.query(
+        'SELECT COUNT(*) as count FROM habits WHERE user_id=$1 AND archived=false',
+        [req.userId]
+      ),
+    ]);
+    const completionsToday = Number(todayRes.rows[0].count);
+    const totalHabits = Number(totalHabitsRes.rows[0].count);
+
+    // Combo bonus: +5 XP per habit already done today before this one, max +25
+    const comboCount = completionsToday - 1;
+    const comboBonus = comboCount >= 1 ? Math.min(comboCount * 5, 25) : 0;
+
+    // Perfect day bonus: all habits done
+    const perfectDay = totalHabits > 0 && completionsToday >= totalHabits;
+    const perfectDayBonus = perfectDay ? 50 : 0;
+
+    const xpGain = (XP_MAP[habit.difficulty as keyof typeof XP_MAP] || 20) + comboBonus + perfectDayBonus;
     const xpResult = await addXP(req.userId!, xpGain);
 
     await checkAndGrantAchievements(req.userId!, 'habit_completed', { streak, totalCompletions, habitId: id });
 
-    res.json({ streak, bestStreak, totalCompletions, xpGained: xpGain, ...xpResult });
+    res.json({ streak, bestStreak, totalCompletions, xpGained: xpGain, comboBonus, comboCount, perfectDay, perfectDayBonus, ...xpResult });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

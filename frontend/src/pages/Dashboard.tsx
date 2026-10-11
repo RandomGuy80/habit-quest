@@ -73,14 +73,18 @@ export default function Dashboard() {
         setBouncingId(habit.id);
         setTimeout(() => setBouncingId(null), 500);
         const res = await api.post(`/habits/${habit.id}/complete`, { date: today });
-        const { xpGained, xp, level, leveledUp } = res.data;
+        const { xpGained, xp, level, leveledUp, comboBonus, comboCount, perfectDay, perfectDayBonus } = res.data;
         updateXP(xp, level);
         if (leveledUp) {
           setLevelUpData({ level });
         } else {
-          const id = Date.now();
-          setXpPopups(p => [...p, { id, text: `+${xpGained} XP` }]);
-          setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500);
+          const popups: { id: number; text: string }[] = [];
+          const base = xpGained - comboBonus - perfectDayBonus;
+          popups.push({ id: Date.now(), text: `+${base} XP` });
+          if (comboBonus > 0) popups.push({ id: Date.now() + 1, text: `⚡ COMBO x${comboCount} +${comboBonus}` });
+          if (perfectDayBonus > 0) popups.push({ id: Date.now() + 2, text: `🌟 PERFECT DAY +${perfectDayBonus}` });
+          setXpPopups(p => [...p, ...popups]);
+          popups.forEach(({ id }) => setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500));
         }
         setCompleted(p => new Set([...p, habit.id]));
         await load(); await refreshUser();
