@@ -1,8 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Zap, CheckCircle2, Circle, Star, Plus, Droplets } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import api from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import LevelUpOverlay from '../components/LevelUpOverlay';
 
 interface Habit {
   id: string; name: string; category: string; difficulty: string;
@@ -25,6 +27,9 @@ export default function Dashboard() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [xpPopups, setXpPopups] = useState<XPPopup[]>([]);
+  const [levelUpData, setLevelUpData] = useState<{ level: number } | null>(null);
+  const [bouncingId, setBouncingId] = useState<string | null>(null);
+  const perfectFiredRef = useRef(false);
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[new Date().getDay() % quotes.length];
 
@@ -41,16 +46,39 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, [load]);
 
+  const completedCount = habits.filter(h => completed.has(h.id)).length;
+  const pct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
+
+  useEffect(() => {
+    if (pct === 100 && habits.length > 0 && !perfectFiredRef.current) {
+      perfectFiredRef.current = true;
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#00FF88', '#00F5FF', '#A78BFA', '#B026FF', '#7C3AED'],
+        gravity: 0.9,
+      });
+    }
+    if (pct < 100) perfectFiredRef.current = false;
+  }, [pct, habits.length]);
+
   const toggleHabit = async (habit: Habit) => {
     const isDone = completed.has(habit.id);
     try {
       if (!isDone) {
+        setBouncingId(habit.id);
+        setTimeout(() => setBouncingId(null), 500);
         const res = await api.post(`/habits/${habit.id}/complete`, { date: today });
         const { xpGained, xp, level, leveledUp } = res.data;
         updateXP(xp, level);
-        const id = Date.now();
-        setXpPopups(p => [...p, { id, text: `+${xpGained} XP${leveledUp ? ' ⚡ LEVEL UP!' : ''}` }]);
-        setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500);
+        if (leveledUp) {
+          setLevelUpData({ level });
+        } else {
+          const id = Date.now();
+          setXpPopups(p => [...p, { id, text: `+${xpGained} XP` }]);
+          setTimeout(() => setXpPopups(p => p.filter(x => x.id !== id)), 2500);
+        }
         setCompleted(p => new Set([...p, habit.id]));
         await load(); await refreshUser();
       } else {
@@ -61,8 +89,6 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const completedCount = habits.filter(h => completed.has(h.id)).length;
-  const pct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
   const maxStreak = habits.reduce((m, h) => Math.max(m, h.current_streak), 0);
   const circumference = 2 * Math.PI * 44;
   const dashOffset = circumference - (pct / 100) * circumference;
@@ -75,10 +101,16 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Level-up overlay */}
+      {levelUpData && (
+        <LevelUpOverlay level={levelUpData.level} onDone={() => setLevelUpData(null)} />
+      )}
+
       {/* XP popups */}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-16 md:top-4 right-4 z-40 flex flex-col gap-2 pointer-events-none">
         {xpPopups.map(p => (
-          <div key={p.id} className="neon-card-cyan px-4 py-2 display text-sm font-body neon-text-cyan animate-bounce">
+          <div key={p.id} className="neon-card-cyan px-4 py-2 display text-sm neon-text-cyan"
+            style={{ animation: 'xpFloat 2.5s ease forwards' }}>
             {p.text}
           </div>
         ))}
@@ -96,7 +128,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 
         {/* Progress ring */}
-        <div className="neon-card p-5 flex items-center gap-5 sm:col-span-1">
+        <div className="neon-card p-5 flex items-center gap-5">
           <svg width="96" height="96" viewBox="0 0 96 96">
             <circle cx="48" cy="48" r="44" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6"/>
             <circle cx="48" cy="48" r="44" fill="none"
@@ -118,7 +150,7 @@ export default function Dashboard() {
             <p className="display text-3xl text-white">{completedCount}<span className="text-muted text-xl">/{habits.length}</span></p>
             <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>Completed</p>
             {pct === 100 && habits.length > 0 && (
-              <p className="display text-sm neon-text-green mt-1">PERFECT DAY!</p>
+              <p className="display text-sm neon-text-green mt-1" style={{ animation: 'perfectPulse 1.5s ease infinite' }}>PERFECT DAY!</p>
             )}
           </div>
         </div>
@@ -174,21 +206,24 @@ export default function Dashboard() {
           <div className="flex flex-col gap-2.5">
             {habits.map(habit => {
               const done = completed.has(habit.id);
+              const bouncing = bouncingId === habit.id;
               return (
                 <div key={habit.id} onClick={() => toggleHabit(habit)}
-                  className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer select-none transition-all"
+                  className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer select-none"
                   style={{
                     background: done ? 'rgba(0,255,136,0.05)' : 'rgba(255,255,255,0.02)',
                     border: `1px solid ${done ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.06)'}`,
                     boxShadow: done ? '0 0 15px rgba(0,255,136,0.08)' : 'none',
+                    transition: 'all 0.25s ease',
+                    animation: bouncing ? 'habitBounce 0.45s cubic-bezier(0.36,0.07,0.19,0.97)' : 'none',
                   }}
                 >
                   {done
-                    ? <CheckCircle2 size={22} style={{ color: '#00FF88', filter: 'drop-shadow(0 0 6px rgba(0,255,136,0.6))' }} />
-                    : <Circle size={22} style={{ color: '#334155' }} />
+                    ? <CheckCircle2 size={22} style={{ color: '#00FF88', filter: 'drop-shadow(0 0 6px rgba(0,255,136,0.6))', transition: 'all 0.2s ease' }} />
+                    : <Circle size={22} style={{ color: '#334155', transition: 'all 0.2s ease' }} />
                   }
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold font-body truncate" style={{ color: done ? '#64748B' : '#E2E8F0', textDecoration: done ? 'line-through' : 'none' }}>
+                    <p className="font-semibold font-body truncate" style={{ color: done ? '#64748B' : '#E2E8F0', textDecoration: done ? 'line-through' : 'none', transition: 'all 0.2s' }}>
                       {habit.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -211,6 +246,24 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes xpFloat {
+          0%   { opacity: 0; transform: translateY(10px); }
+          20%  { opacity: 1; transform: translateY(0); }
+          80%  { opacity: 1; transform: translateY(-8px); }
+          100% { opacity: 0; transform: translateY(-20px); }
+        }
+        @keyframes habitBounce {
+          0%, 100% { transform: scale(1); }
+          30%       { transform: scale(1.04); }
+          60%       { transform: scale(0.97); }
+        }
+        @keyframes perfectPulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.6; }
+        }
+      `}</style>
     </div>
   );
 }
