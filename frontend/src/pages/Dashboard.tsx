@@ -248,7 +248,7 @@ export default function Dashboard() {
               const bouncing = bouncingId === habit.id;
               return (
                 <div key={habit.id} onClick={() => toggleHabit(habit)}
-                  className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer select-none"
+                  className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-3 rounded-xl cursor-pointer select-none"
                   style={{
                     background: done ? 'rgba(0,255,136,0.05)' : 'rgba(255,255,255,0.02)',
                     border: `1px solid ${done ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.06)'}`,
@@ -274,10 +274,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                   {habit.current_streak > 0 && (
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Droplets size={13} style={{ color: '#00F5FF' }} />
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                      <Droplets size={12} style={{ color: '#00F5FF' }} />
                       <span className="display text-sm neon-text-cyan">{habit.current_streak}</span>
-                      <span className="text-xs font-body" style={{ color: '#64748B' }}>{t('common.streak')}</span>
                     </div>
                   )}
                   {!done && habit.current_streak > 0 && (
