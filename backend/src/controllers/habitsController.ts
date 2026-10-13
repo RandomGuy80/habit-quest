@@ -20,6 +20,14 @@ async function addXP(userId: string, amount: number): Promise<{ xp: number; leve
   return { xp, level, leveledUp };
 }
 
+async function subtractXP(userId: string, amount: number): Promise<{ xp: number; level: number }> {
+  const res = await pool.query('SELECT xp, level FROM users WHERE id = $1', [userId]);
+  let { xp, level } = res.rows[0];
+  xp = Math.max(0, xp - amount);
+  await pool.query('UPDATE users SET xp = $1, level = $2 WHERE id = $3', [xp, level, userId]);
+  return { xp, level };
+}
+
 export async function getHabits(req: AuthRequest, res: Response): Promise<void> {
   try {
     const result = await pool.query(
@@ -112,14 +120,15 @@ export async function completeHabit(req: AuthRequest, res: Response): Promise<vo
     );
 
     // Count completions today (current insert already committed)
+    const todayDayName = ['sun','mon','tue','wed','thu','fri','sat'][new Date(date).getDay()];
     const [todayRes, totalHabitsRes] = await Promise.all([
       pool.query(
         'SELECT COUNT(*) as count FROM habit_completions WHERE user_id=$1 AND completed_date=$2',
         [req.userId, date]
       ),
       pool.query(
-        'SELECT COUNT(*) as count FROM habits WHERE user_id=$1 AND archived=false',
-        [req.userId]
+        `SELECT COUNT(*) as count FROM habits WHERE user_id=$1 AND archived=false AND frequency @> $2::jsonb`,
+        [req.userId, JSON.stringify([todayDayName])]
       ),
     ]);
     const completionsToday = Number(todayRes.rows[0].count);
@@ -129,12 +138,18 @@ export async function completeHabit(req: AuthRequest, res: Response): Promise<vo
     const comboCount = completionsToday - 1;
     const comboBonus = comboCount >= 1 ? Math.min(comboCount * 5, 25) : 0;
 
-    // Perfect day bonus: all habits done
+    // Perfect day bonus: all today's habits done
     const perfectDay = totalHabits > 0 && completionsToday >= totalHabits;
     const perfectDayBonus = perfectDay ? 50 : 0;
 
     const xpGain = (XP_MAP[habit.difficulty as keyof typeof XP_MAP] || 20) + comboBonus + perfectDayBonus;
     const xpResult = await addXP(req.userId!, xpGain);
+
+    // Store xp_gained so it can be reversed on uncomplete
+    await pool.query(
+      'UPDATE habit_completions SET xp_gained = $1 WHERE habit_id=$2 AND user_id=$3 AND completed_date=$4',
+      [xpGain, id, req.userId, date]
+    );
 
     await checkAndGrantAchievements(req.userId!, 'habit_completed', { streak, totalCompletions, habitId: id });
 
@@ -149,10 +164,20 @@ export async function uncompleteHabit(req: AuthRequest, res: Response): Promise<
   const { id } = req.params;
   const date = req.body.date || new Date().toISOString().split('T')[0];
   try {
+    // Fetch xp_gained before deleting so we can reverse it
+    const compRes = await pool.query(
+      'SELECT xp_gained FROM habit_completions WHERE habit_id=$1 AND user_id=$2 AND completed_date=$3',
+      [id, req.userId, date]
+    );
+    const xpToRemove: number = compRes.rows[0]?.xp_gained ?? 0;
+
     await pool.query(
       'DELETE FROM habit_completions WHERE habit_id=$1 AND user_id=$2 AND completed_date=$3',
       [id, req.userId, date]
     );
+
+    const xpResult = await subtractXP(req.userId!, xpToRemove);
+
     const completions = await pool.query(
       'SELECT completed_date FROM habit_completions WHERE habit_id=$1 ORDER BY completed_date DESC',
       [id]
@@ -172,7 +197,7 @@ export async function uncompleteHabit(req: AuthRequest, res: Response): Promise<
       'UPDATE habits SET current_streak=$1, total_completions=$2 WHERE id=$3',
       [streak, Math.max(0, total_completions - 1), id]
     );
-    res.json({ streak, bestStreak: best_streak });
+    res.json({ streak, bestStreak: best_streak, xpRemoved: xpToRemove, ...xpResult });
   } catch {
     res.status(500).json({ error: 'Server error' });
   }

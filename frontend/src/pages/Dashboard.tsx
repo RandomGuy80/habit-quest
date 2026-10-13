@@ -9,7 +9,7 @@ import LevelUpOverlay from '../components/LevelUpOverlay';
 
 interface Habit {
   id: string; name: string; category: string; difficulty: string;
-  color: string; current_streak: number;
+  color: string; current_streak: number; frequency: string[];
 }
 interface XPPopup { id: number; text: string }
 
@@ -35,6 +35,8 @@ export default function Dashboard() {
   const perfectFiredRef = useRef(false);
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[new Date().getDay() % quotes.length];
+  const DAY_MAP = ['sun','mon','tue','wed','thu','fri','sat'];
+  const todayDay = DAY_MAP[new Date().getDay()];
 
   const load = useCallback(async () => {
     try {
@@ -51,11 +53,15 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  const completedCount = habits.filter(h => completed.has(h.id)).length;
-  const pct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
+  const todayHabits = habits.filter(h => {
+    const freq = Array.isArray(h.frequency) ? h.frequency : [];
+    return freq.length === 0 || freq.includes(todayDay);
+  });
+  const completedCount = todayHabits.filter(h => completed.has(h.id)).length;
+  const pct = todayHabits.length > 0 ? Math.round((completedCount / todayHabits.length) * 100) : 0;
 
   useEffect(() => {
-    if (pct === 100 && habits.length > 0 && !perfectFiredRef.current) {
+    if (pct === 100 && todayHabits.length > 0 && !perfectFiredRef.current) {
       perfectFiredRef.current = true;
       confetti({
         particleCount: 120,
@@ -91,9 +97,16 @@ export default function Dashboard() {
         setCompleted(p => new Set([...p, habit.id]));
         await load(); await refreshUser();
       } else {
-        await api.post(`/habits/${habit.id}/uncomplete`, { date: today });
+        const res = await api.post(`/habits/${habit.id}/uncomplete`, { date: today });
+        const { xpRemoved, xp, level } = res.data;
         setCompleted(p => { const s = new Set(p); s.delete(habit.id); return s; });
-        await load();
+        if (xpRemoved > 0) {
+          updateXP(xp, level);
+          const pid = Date.now();
+          setXpPopups(p => [...p, { id: pid, text: `-${xpRemoved} XP` }]);
+          setTimeout(() => setXpPopups(p => p.filter(x => x.id !== pid)), 2500);
+        }
+        await load(); await refreshUser();
       }
     } catch (err) { console.error(err); }
   };
@@ -115,7 +128,7 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const maxStreak = habits.reduce((m, h) => Math.max(m, h.current_streak), 0);
+  const maxStreak = todayHabits.reduce((m, h) => Math.max(m, h.current_streak), 0);
   const circumference = 2 * Math.PI * 44;
   const dashOffset = circumference - (pct / 100) * circumference;
 
@@ -173,7 +186,7 @@ export default function Dashboard() {
             <text x="48" y="60" textAnchor="middle" fill="#64748B" fontSize="10" fontFamily="Chakra Petch">{t('dashboard.today')}</text>
           </svg>
           <div>
-            <p className="display text-3xl text-white">{completedCount}<span className="text-muted text-xl">/{habits.length}</span></p>
+            <p className="display text-3xl text-white">{completedCount}<span className="text-muted text-xl">/{todayHabits.length}</span></p>
             <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{t('dashboard.completed')}</p>
             {pct === 100 && habits.length > 0 && (
               <p className="display text-sm neon-text-green mt-1" style={{ animation: 'perfectPulse 1.5s ease infinite' }}>{t('dashboard.perfectDay')}</p>
@@ -222,7 +235,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {habits.length === 0 ? (
+        {todayHabits.length === 0 ? (
           <div className="text-center py-12">
             <p className="display text-2xl neon-text-purple mb-2">{t('dashboard.noHabits')}</p>
             <p className="text-sm font-body mb-5" style={{ color: '#64748B' }}>{t('dashboard.noHabitsDesc')}</p>
@@ -230,7 +243,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {habits.map(habit => {
+            {todayHabits.map(habit => {
               const done = completed.has(habit.id);
               const bouncing = bouncingId === habit.id;
               return (
